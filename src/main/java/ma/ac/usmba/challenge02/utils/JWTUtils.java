@@ -25,7 +25,7 @@ public class JWTUtils {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
+        return Jwts.parser().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
     }
 
     private <T> T extractClaims(String token, Function<Claims, T> claimsResolver) {
