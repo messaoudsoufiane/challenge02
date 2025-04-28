@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -19,13 +18,17 @@ import java.util.function.Function;
 public class JWTUtils {
 
     private Key getSigningKey(){
-        String SECRET ="316530d8dd6518f255b4bcb8e4e82c560530bbf7a228ed0ada526e3cf2cb6646";
+        String SECRET ="VmR6UmhOR3c5dXNMYXlyZ2JlOHZNU2szMlA0N0FwRG1qSlhZWmFiYzEyMzQ1Njc4OTA=";
         byte[] keyBytes = Decoders.BASE64.decode(SECRET);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parser().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
+        return Jwts.parserBuilder()  // Utilisation de parserBuilder() avec la version 0.11.5
+                .setSigningKey(getSigningKey())  // Utilise la clé de signature définie plus haut
+                .build()  // Construit le parser
+                .parseClaimsJws(token)  // Parse le JWT
+                .getBody();  // Récupère le corps des claims
     }
 
     private <T> T extractClaims(String token, Function<Claims, T> claimsResolver) {
@@ -38,7 +41,7 @@ public class JWTUtils {
     }
 
     private Date extractExpiration(String token) {
-        return (Date) extractClaims(token,Claims::getExpiration);
+        return extractClaims(token, Claims::getExpiration);
     }
 
     private boolean isTokenExpired(String token) {
@@ -53,7 +56,7 @@ public class JWTUtils {
         return Jwts.builder().setClaims(extractClaims).setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 7))
-                .signWith(getSigningKey(),SignatureAlgorithm.HS256).compact();
+                .signWith(SignatureAlgorithm.HS256, getSigningKey()).compact();
     }
 
     public String generateToken(UserDetails userDetails) {
